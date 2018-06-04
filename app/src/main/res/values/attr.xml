@@ -1,0 +1,6 @@
+<resources>
+    <declare-styleable name="DragContainer">
+        <attr name="drag_child_id" format="reference" />
+        <attr name="content_view_id" format="reference" />
+    </declare-styleable>
+</resources>
