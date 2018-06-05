@@ -2,5 +2,6 @@
     <declare-styleable name="DragContainer">
         <attr name="drag_child_id" format="reference" />
         <attr name="content_view_id" format="reference" />
+        <attr name="drag_view_align" format="integer" />
     </declare-styleable>
 </resources>

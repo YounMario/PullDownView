@@ -1,4 +1,4 @@
-package com.example.yinlongquan.pulldownview;
+package com.younchen.pulldownmenu;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
