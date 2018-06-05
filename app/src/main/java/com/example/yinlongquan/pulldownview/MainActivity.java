@@ -27,8 +27,7 @@ public class MainActivity extends AppCompatActivity {
             list.add("adsfasdf");
         }
 
-        mDragContainer = (DragContainer) findViewById(R.id.drag_container);
-
+        mDragContainer = findViewById(R.id.drag_container);
         ListView listView = findViewById(R.id.list_view);
         listView.setAdapter(new ListAdapter(this, list));
 

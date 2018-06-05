@@ -17,6 +17,12 @@ import com.example.pulldownmenu.R;
 
 public class DragContainer extends ViewGroup {
 
+    private static final int DRAG_VIEW_ALIGN_LEFT = 0;
+    private static final int DRAG_VIEW_ALIGN_RIGHT = 1;
+
+    private static final int DRAG_VIEW_DEFAULT_ALIGN_MARGIN = 32;
+
+
     private int mContentId;
     private int mDragChildId;
     private boolean mIsDragging;
@@ -25,7 +31,6 @@ public class DragContainer extends ViewGroup {
     private DragView mDragView;
 
     private static final String TAG = "DragContainer";
-
 
     private float mTouchx;
     private float mTouchy;
@@ -36,6 +41,10 @@ public class DragContainer extends ViewGroup {
     private static final int OPENING = 1;
     private static final int CLOSED = 2;
     private int mContentStatus = CLOSED;
+
+    private int mDragViewAlign;
+    private int mDragViewAlignMargin;
+
 
     public DragContainer(Context context) {
         this(context, null);
@@ -50,6 +59,9 @@ public class DragContainer extends ViewGroup {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.DragContainer);
         mDragChildId = typedArray.getResourceId(R.styleable.DragContainer_drag_child_id, -1);
         mContentId = typedArray.getResourceId(R.styleable.DragContainer_content_view_id, -1);
+        mDragViewAlign = typedArray.getInt(R.styleable.DragContainer_drag_view_align, DRAG_VIEW_ALIGN_LEFT);
+        mDragViewAlignMargin = (int) typedArray.getDimension(R.styleable.DragContainer_drag_view_align_margin,
+                DRAG_VIEW_DEFAULT_ALIGN_MARGIN);
         typedArray.recycle();
         checkValid();
         init();
@@ -105,11 +117,19 @@ public class DragContainer extends ViewGroup {
         return mContentStatus == OPENED;
     }
 
-
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         if (mDragView != null) {
-            mDragView.layout(l, t, l + mDragView.getMeasuredWidth(),
+            int left;
+            int right;
+            if (mDragViewAlign == DRAG_VIEW_ALIGN_LEFT) {
+                left = l + mDragViewAlignMargin;
+                right = left + mDragView.getMeasuredWidth();
+            } else {
+                left = r - mDragViewAlignMargin - mDragView.getMeasuredWidth();
+                right = r - mDragViewAlignMargin;
+            }
+            mDragView.layout(left, t, right,
                     t + mDragView.getMeasuredHeight());
         }
         if (mContentView != null) {
@@ -131,7 +151,7 @@ public class DragContainer extends ViewGroup {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (mDragView.isHintDragArea(lastTouchX,lastTouchY)) {
+                if (isHintDragArea(lastTouchX, lastTouchY)) {
                     if (!mScroller.isFinished()) {
                         mScroller.abortAnimation();
                     }
@@ -159,6 +179,10 @@ public class DragContainer extends ViewGroup {
                 break;
         }
         return mIsDragging;
+    }
+
+    private boolean isHintDragArea(int lastTouchX, int lastTouchY) {
+        return mDragView.isHintDragArea(lastTouchX - mDragView.getLeft(), lastTouchY - mDragView.getTop());
     }
 
     private void openingContentView(int lastTouchY) {

@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:content_view_id="@+id/content"
-    app:drag_child_id="@+id/balloon_view">
+    app:drag_child_id="@+id/balloon_view"
+    app:drag_view_align="right"
+    app:drag_view_align_margin="18dp">
 
 
     <RelativeLayout

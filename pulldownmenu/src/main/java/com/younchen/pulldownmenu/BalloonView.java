@@ -1,6 +1,7 @@
 package com.younchen.pulldownmenu;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -18,15 +19,21 @@ import com.example.pulldownmenu.R;
 
 public class BalloonView extends DragView {
 
+
     private Bitmap mBitmap;
     private Paint mPaint;
     private Rect mBalloonHead;
     private Rect mBalloonPaintHead;
 
-    private static final int BALLOON_SIZE = 80;
-    private static final int BALLOON_LINE_LENGTH = 120;
-    private static final int BALLOON_LINE_WIDTH = 4;
-    private static final int BALLOON_LINE_COLOR = Color.GRAY;
+    private static final int BALLOON_DEFAULT_SIZE = 80;
+    private static final int BALLOON_LINE_DEFAULT_LENGTH = 120;
+    private static final int BALLOON_LINE_DEFAULT_WIDTH = 4;
+    private static final int BALLOON_LINE_DEFAULT_COLOR = Color.RED;
+
+    private int mBalloonSize;
+    private int mLineLength;
+    private int mLineWidth;
+    private int mLineColor;
 
     public BalloonView(Context context) {
         this(context, null);
@@ -38,6 +45,12 @@ public class BalloonView extends DragView {
 
     public BalloonView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.BalloonView);
+        mBalloonSize = (int) typedArray.getDimension(R.styleable.BalloonView_size, BALLOON_DEFAULT_SIZE);
+        mLineLength = (int) typedArray.getDimension(R.styleable.BalloonView_line_length, BALLOON_LINE_DEFAULT_LENGTH);
+        mLineWidth = (int) typedArray.getDimension(R.styleable.BalloonView_line_width, BALLOON_LINE_DEFAULT_WIDTH);
+        mLineColor = typedArray.getColor(R.styleable.BalloonView_line_color, BALLOON_LINE_DEFAULT_COLOR);
+        typedArray.recycle();
         init();
     }
 
@@ -52,8 +65,9 @@ public class BalloonView extends DragView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         //todo
-        setMeasuredDimension(BALLOON_SIZE, BALLOON_LINE_LENGTH + BALLOON_SIZE);
-        mBalloonHead.set(0, BALLOON_LINE_LENGTH, BALLOON_SIZE, BALLOON_LINE_LENGTH + BALLOON_SIZE);
+        setMeasuredDimension(mBalloonSize, mLineLength + mBalloonSize);
+        mBalloonHead.set(0, mLineLength, mBalloonSize,
+                mLineLength + mBalloonSize);
     }
 
     @Override
@@ -61,14 +75,14 @@ public class BalloonView extends DragView {
         super.onDraw(canvas);
         //draw line
         canvas.save();
-        mPaint.setColor(BALLOON_LINE_COLOR);
-        canvas.translate((getWidth() - BALLOON_LINE_WIDTH) / 2, 0);
-        canvas.drawRect(0, 0, BALLOON_LINE_WIDTH, BALLOON_LINE_LENGTH, mPaint);
+        mPaint.setColor(mLineColor);
+        canvas.translate((getWidth() - mLineWidth) / 2, 0);
+        canvas.drawRect(0, 0, mLineWidth, mLineLength, mPaint);
         canvas.restore();
         //draw
         canvas.save();
-        canvas.translate(0, BALLOON_LINE_LENGTH - 8);
-        mBalloonPaintHead.set(0, 0, BALLOON_SIZE, BALLOON_SIZE);
+        canvas.translate(0, mLineLength - 4);
+        mBalloonPaintHead.set(0, 0, mBalloonSize, mBalloonSize);
         canvas.drawBitmap(mBitmap, null, mBalloonPaintHead, mPaint);
         canvas.restore();
     }
