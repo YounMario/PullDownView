@@ -3,7 +3,6 @@ package com.younchen.pulldownmenu;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,9 +22,7 @@ public class DragContainer extends ViewGroup {
     private boolean mIsDragging;
 
     private View mContentView;
-    private View mDragView;
-    private final int mScreenHeight;
-    private final int mScreenWidth;
+    private DragView mDragView;
 
     private static final String TAG = "DragContainer";
 
@@ -35,6 +32,10 @@ public class DragContainer extends ViewGroup {
 
     private Scroller mScroller;
 
+    private static final int OPENED = 0;
+    private static final int OPENING = 1;
+    private static final int CLOSED = 2;
+    private int mContentStatus = CLOSED;
 
     public DragContainer(Context context) {
         this(context, null);
@@ -50,11 +51,6 @@ public class DragContainer extends ViewGroup {
         mDragChildId = typedArray.getResourceId(R.styleable.DragContainer_drag_child_id, -1);
         mContentId = typedArray.getResourceId(R.styleable.DragContainer_content_view_id, -1);
         typedArray.recycle();
-
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        mScreenHeight = metrics.heightPixels;
-        mScreenWidth = metrics.widthPixels;
-
         checkValid();
         init();
     }
@@ -74,15 +70,21 @@ public class DragContainer extends ViewGroup {
         Log.d(TAG, "open content view");
         int scrollY = getScrollY();
         //scrollY startY , dy distance in y axis
-        mScroller.startScroll(0, scrollY, 0, -mScreenHeight - scrollY);
+        mScroller.startScroll(0, scrollY, 0, -mContentView.getMeasuredHeight() - scrollY);
         invalidate();
+        updateStatus(OPENED);
     }
 
-    private void closeContentView() {
+    private void updateStatus(int status) {
+        mContentStatus = status;
+    }
+
+    public void closeContentView() {
         Log.d(TAG, "close content view");
         int scrollY = getScrollY();
         mScroller.startScroll(0, scrollY, 0, -scrollY);
         invalidate();
+        updateStatus(CLOSED);
     }
 
 
@@ -96,7 +98,11 @@ public class DragContainer extends ViewGroup {
     }
 
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return true;
+        return mIsDragging;
+    }
+
+    private boolean isContentOpened() {
+        return mContentStatus == OPENED;
     }
 
 
@@ -107,7 +113,7 @@ public class DragContainer extends ViewGroup {
                     t + mDragView.getMeasuredHeight());
         }
         if (mContentView != null) {
-            mContentView.layout(0, -mScreenHeight, mContentView.getMeasuredWidth(), 0);
+            mContentView.layout(0, -mContentView.getMeasuredHeight(), mContentView.getMeasuredWidth(), 0);
         }
     }
 
@@ -125,7 +131,7 @@ public class DragContainer extends ViewGroup {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (touchedView(mDragView, lastTouchX, lastTouchY)) {
+                if (mDragView.isHintDragArea(lastTouchX,lastTouchY)) {
                     if (!mScroller.isFinished()) {
                         mScroller.abortAnimation();
                     }
@@ -143,7 +149,8 @@ public class DragContainer extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 mIsDragging = false;
-                boolean needOpen = lastTouchY - mTouchy > mScreenHeight / 2 - mDragView.getMeasuredHeight();
+                boolean needOpen = lastTouchY - mTouchy >
+                        mContentView.getMeasuredHeight() / 2 - mDragView.getMeasuredHeight();
                 if (needOpen) {
                     openContentView();
                 } else {
@@ -156,11 +163,9 @@ public class DragContainer extends ViewGroup {
 
     private void openingContentView(int lastTouchY) {
         scrollTo((int) getX(), lastTouchY);
+        updateStatus(OPENING);
     }
 
-    private boolean touchedView(View view, float x, float y) {
-        return true;
-    }
 
     @Override
     public void computeScroll() {
