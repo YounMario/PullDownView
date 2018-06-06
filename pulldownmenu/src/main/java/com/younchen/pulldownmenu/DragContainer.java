@@ -151,7 +151,7 @@ public class DragContainer extends ViewGroup {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (isHintDragArea(lastTouchX, lastTouchY)) {
+                if (isHintDragArea(lastTouchX, lastTouchY) || isContentOpened()) {
                     if (!mScroller.isFinished()) {
                         mScroller.abortAnimation();
                     }
@@ -162,14 +162,18 @@ public class DragContainer extends ViewGroup {
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mIsDragging) {
-                    openingContentView(-lastTouchY);
+                    int distance = (int) (lastTouchY - mTouchy);
+                    mTouchx = lastTouchX;
+                    mTouchy = lastTouchY;
+                    openingContentView(-distance);
                 }
                 break;
 
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 mIsDragging = false;
-                boolean needOpen = lastTouchY - mTouchy >
+                isContentOpened();
+                boolean needOpen = -getScrollY() >
                         mContentView.getMeasuredHeight() / 2 - mDragView.getMeasuredHeight();
                 if (needOpen) {
                     openContentView();
@@ -185,11 +189,14 @@ public class DragContainer extends ViewGroup {
         return mDragView.isHintDragArea(lastTouchX - mDragView.getLeft(), lastTouchY - mDragView.getTop());
     }
 
-    private void openingContentView(int lastTouchY) {
-        scrollTo((int) getX(), lastTouchY);
+    private void openingContentView(int scrollDistance) {
+        if (Math.abs(getScrollY() + scrollDistance) >
+                Math.abs(mContentView.getMeasuredHeight())) {
+            return;
+        }
+        scrollBy((int) getX(), scrollDistance);
         updateStatus(OPENING);
     }
-
 
     @Override
     public void computeScroll() {
